@@ -253,14 +253,42 @@ function displayRouteSummary(routeObj) {
     `;
 }
 
-async function getDurationWithTraffic(origin, destination) {
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.lat},${origin.lon}&destination=${destination.lat},${destination.lon}&departure_time=now&key=${GOOGLE_API_KEY}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data.routes && data.routes[0] && data.routes[0].legs[0] && data.routes[0].legs[0].duration_in_traffic) {
-        return data.routes[0].legs[0].duration_in_traffic.value; // saniye
-    }
-    return null;
+function getStepDurationWithDirectionsService(origin, destination) {
+    return new Promise((resolve) => {
+        const service = new google.maps.DirectionsService();
+        service.route({
+            origin: { lat: origin.lat, lng: origin.lon },
+            destination: { lat: destination.lat, lng: destination.lon },
+            travelMode: google.maps.TravelMode.DRIVING
+        }, (result, status) => {
+            if (status === 'OK' && result.routes[0] && result.routes[0].legs[0]) {
+                resolve(result.routes[0].legs[0].duration.value); // saniye
+            } else {
+                resolve(0);
+            }
+        });
+    });
+}
+
+function getStepDurationWithTrafficDirectionsService(origin, destination) {
+    return new Promise((resolve) => {
+        const service = new google.maps.DirectionsService();
+        service.route({
+            origin: { lat: origin.lat, lng: origin.lon },
+            destination: { lat: destination.lat, lng: destination.lon },
+            travelMode: google.maps.TravelMode.DRIVING,
+            drivingOptions: {
+                departureTime: new Date(),
+                trafficModel: 'bestguess'
+            }
+        }, (result, status) => {
+            if (status === 'OK' && result.routes[0] && result.routes[0].legs[0] && result.routes[0].legs[0].duration_in_traffic) {
+                resolve(result.routes[0].legs[0].duration_in_traffic.value); // saniye
+            } else {
+                resolve(0);
+            }
+        });
+    });
 }
 
 async function displayTimeEstimates(routeObj) {
@@ -268,22 +296,27 @@ async function displayTimeEstimates(routeObj) {
     if (!timeDiv) return;
     const totalKm = routeObj.totalDistance;
     const carTime = totalKm / 82;
-    const planeTime = totalKm / 800;
-    // Trafikli süreyi hesapla
+    // Trafikli ve gerçek navigasyon süresi hesapla
     let trafficSeconds = 0;
+    let navSeconds = 0;
     for (let i = 0; i < routeObj.route.length - 1; i++) {
         const from = routeObj.route[i];
         const to = routeObj.route[i + 1];
         try {
-            const dur = await getDurationWithTraffic(from, to);
+            const dur = await getStepDurationWithTrafficDirectionsService(from, to);
             if (dur) trafficSeconds += dur;
+        } catch (e) { }
+        try {
+            const navDur = await getStepDurationWithDirectionsService(from, to);
+            if (navDur) navSeconds += navDur;
         } catch (e) { }
     }
     let trafficHours = trafficSeconds / 3600;
+    let navMinutes = navSeconds / 60;
     timeDiv.innerHTML = `
         <div><b>Araçla (82 km/saat):</b> ${carTime.toFixed(1)} saat</div>
-        <div><b>Uçakla (800 km/saat):</b> ${planeTime.toFixed(1)} saat</div>
         <div><b>Trafikli Tahmini Süre:</b> ${trafficHours > 0 ? trafficHours.toFixed(2) + ' saat' : 'Veri yok'}</div>
+        <div><b>Gerçek Navigasyon Süresi:</b> ${navMinutes > 0 ? navMinutes.toFixed(0) + ' dk' : 'Veri yok'}</div>
     `;
 }
 
@@ -376,6 +409,7 @@ async function showFullResults(routeObj, allDistances) {
     await displayRouteSequence(routeObj);
     displayDetailedDistances(routeObj, allDistances);
     displayAllDistancesPerStep(routeObj, allDistances);
+    await drawRouteOnMapWithDirections(routeObj); // Haritada yol çizimi
     const resultsSection = document.getElementById('resultsSection');
     if (resultsSection) resultsSection.style.display = '';
 }
@@ -403,6 +437,62 @@ function exportResultsAsTxt() {
         URL.revokeObjectURL(url);
     }, 100);
 }
+let routeStepPolylines = [];
+
+function clearRouteStepPolylines() {
+    if (routeStepPolylines && Array.isArray(routeStepPolylines)) {
+        routeStepPolylines.forEach(poly => poly.setMap(null));
+    }
+    routeStepPolylines = [];
+}
+
+async function drawRouteOnMapWithDirections(routeObj) {
+    clearRouteStepPolylines();
+    if (!window.directionsService) {
+        window.directionsService = new google.maps.DirectionsService();
+    }
+    const points = routeObj.route;
+    if (points.length < 2) return;
+    // Renk paleti (adım sayısı kadar döner)
+    const colors = [
+        '#e74c3c', // kırmızı
+        '#f39c12', // turuncu
+        '#27ae60', // yeşil
+        '#2980b9', // mavi
+        '#8e44ad', // mor
+        '#16a085', // teal
+        '#d35400', // koyu turuncu
+        '#2c3e50', // koyu mavi
+        '#c0392b', // koyu kırmızı
+        '#7f8c8d'  // gri
+    ];
+    for (let i = 0; i < points.length - 1; i++) {
+        const from = points[i];
+        const to = points[i + 1];
+        const color = colors[i % colors.length];
+        const request = {
+            origin: { lat: from.lat, lng: from.lon },
+            destination: { lat: to.lat, lng: to.lon },
+            travelMode: google.maps.TravelMode.DRIVING
+        };
+        await new Promise(resolve => {
+            window.directionsService.route(request, function (result, status) {
+                if (status === 'OK' && result.routes[0] && result.routes[0].overview_path) {
+                    const polyline = new google.maps.Polyline({
+                        path: result.routes[0].overview_path,
+                        strokeColor: color,
+                        strokeOpacity: 0.9,
+                        strokeWeight: 6,
+                        map: map
+                    });
+                    routeStepPolylines.push(polyline);
+                }
+                resolve();
+            });
+        });
+    }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     if (typeof google === 'undefined' || !google.maps) {
         setTimeout(() => window.dispatchEvent(new Event('DOMContentLoaded')), 500);
