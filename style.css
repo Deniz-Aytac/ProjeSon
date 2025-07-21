@@ -332,12 +332,12 @@ input[type="number"]:focus {
 }
 
 .btn-sucess {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    background: linear-gradient(135deg, #2100b6 0%, #3d00c2 100%);
     color: white;
 }
 
 .btn-success:hover {
-    background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+    background: linear-gradient(135deg, #1700c9 0%, #0000bd 100%);
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
 }
