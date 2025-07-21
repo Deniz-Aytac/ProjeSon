@@ -303,61 +303,40 @@ input[type="number"]:focus {
 }
 
 .btn-primary {
-    position: relative;
-    padding: 14px 24px;
-    border: 2px solid transparent;
-    border-radius: 15px;
+    background: #38a1db;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    box-shadow: none;
     font-size: 1rem;
     font-weight: 600;
+    padding: 14px 24px;
     cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 10px;
     overflow: hidden;
-    background: linear-gradient(135deg, #38a1db 0%, #48bb78 100%);
-    background-clip: padding-box, border-box;
-    box-shadow: 0 4px 18px 0 rgba(56, 161, 219, 0.13), 0 1.5px 8px 0 rgba(72, 187, 120, 0.10), 0 0.5px 0.5px 0 rgba(56, 161, 219, 0.08) inset;
-    transition: background 0.5s cubic-bezier(.4, 2, .3, 1), box-shadow 0.3s, transform 0.18s;
-    color: #fff;
-    z-index: 1;
 }
 
-.btn-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 15px;
-    padding: 2px;
-    background: linear-gradient(120deg, #38a1db, #48bb78, #38a1db 90%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    z-index: 0;
-}
-
+.btn-primary::before,
 .btn-primary::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 48%;
-    border-radius: 15px 15px 40% 40%/60% 60% 40% 40%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.08) 100%);
-    pointer-events: none;
-    z-index: 2;
+    display: none !important;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(120deg, #48bb78 0%, #38a1db 100%);
-    box-shadow: 0 8px 32px 0 rgba(56, 161, 219, 0.18), 0 2px 12px 0 rgba(72, 187, 120, 0.13), 0 1px 1px 0 rgba(56, 161, 219, 0.10) inset;
-    transform: scale(1.045);
+    background: #2b8ac6;
+    color: #fff;
+    box-shadow: none;
+    transform: none;
 }
 
 .btn-primary:active {
-    transform: scale(0.98);
-    box-shadow: 0 2px 8px 0 rgba(56, 161, 219, 0.10);
+    background: #2170a3;
+    color: #fff;
+    box-shadow: none;
+    transform: none;
 }
 
 .btn-primary span,
