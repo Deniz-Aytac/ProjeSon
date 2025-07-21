@@ -143,6 +143,7 @@ function removeMarkerById(id) {
     destinationMarkers = destinationMarkers.filter(marker => {
         if (marker._markerId === id) {
             marker.setMap(null);
+            clearRouteStepPolylines(); // Rota çizgilerini de sil
             return false;
         }
         return true;
@@ -158,6 +159,7 @@ function clearAll() {
     destinationCounter = 0;
     isStartSelected = false;
     document.getElementById('resultsSection').style.display = 'none';
+    clearRouteStepPolylines(); // Rota çizgilerini de sil
 }
 function clearStartPoint() {
     document.getElementById('startLat').value = '';
@@ -244,11 +246,9 @@ function displayRouteSummary(routeObj) {
     const summaryDiv = document.getElementById('routeSummary');
     if (!summaryDiv) return;
     const totalKm = routeObj.totalDistance;
-    const totalMiles = totalKm * 0.621371;
     const visited = routeObj.route.length - 1;
     summaryDiv.innerHTML = `
         <div><b>Toplam Mesafe:</b> ${totalKm.toFixed(2)} km</div>
-        <div><b>Toplam Mesafe:</b> ${totalMiles.toFixed(2)} mil</div>
         <div><b>Ziyaret Edilen Nokta:</b> ${visited}</div>
     `;
 }
