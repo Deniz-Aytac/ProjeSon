@@ -6,49 +6,90 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: #fff !important;
     min-height: 100vh;
     color: #333;
-    position: relative;
-    overflow-x: hidden;
 }
 
-body::before {
-    content: '';
+/* Sağ ve sol kenara silik elfatek görseli */
+.bg-side-logo,
+.bg-side-logo-right {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    height: 100vh;
+    width: 120px;
+    background: url('images/elfatek.png') no-repeat center center;
+    background-size: 80px 80%;
+    opacity: 0.18;
+    z-index: 10;
     pointer-events: none;
-    z-index: 1;
+}
+
+.bg-side-logo {
+    left: 0;
+}
+
+.bg-side-logo-right {
+    right: 0;
+}
+
+.bg-side-logo span {
+    display: none;
+}
+
+@media (max-width: 1200px) {
+
+    .bg-side-logo,
+    .bg-side-logo-right {
+        width: 90px;
+        background-size: 60px 70%;
+    }
+
+    .container {
+        margin-left: 90px;
+        margin-right: 90px;
+    }
+}
+
+@media (max-width: 700px) {
+
+    .bg-side-logo,
+    .bg-side-logo-right {
+        display: none;
+    }
+
+    .container {
+        margin-left: 0;
+        margin-right: 0;
+    }
 }
 
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
     position: relative;
-    z-index: 2;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(4, 4, 181, 0.1);
+    margin-left: 200px;
+    margin-right: 200px;
 }
 
-header {
+header,
+.elfatek-header {
     text-align: center;
     margin-bottom: 40px;
-    color: white;
-}
-
-header h1 {
+    color: #140054;
     font-size: 3rem;
     font-weight: 800;
-    margin-bottom: 15px;
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(45deg, #fff, #f0f8ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: titleGlow 3s ease-in-out infinite alternate;
+    letter-spacing: 0.04em;
+    background: none;
+    text-shadow: none;
+    border: none;
+    padding-bottom: 0;
+    -webkit-background-clip: initial;
+    -webkit-text-fill-color: initial;
+    background-clip: initial;
+    animation: none;
 }
 
 @keyframes titleGlow {
@@ -203,7 +244,8 @@ header p {
     font-weight: 500;
 }
 
-.input-group input {
+input[type="text"],
+input[type="number"] {
     padding: 15px;
     border: 2px solid rgba(226, 232, 240, 0.8);
     border-radius: 15px;
@@ -214,7 +256,8 @@ header p {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
-.input-group input:focus {
+input[type="text"]:focus,
+input[type="number"]:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 8px 25px rgba(102, 126, 234, 0.2);
@@ -260,14 +303,67 @@ header p {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    position: relative;
+    padding: 14px 24px;
+    border: 2px solid transparent;
+    border-radius: 15px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #38a1db 0%, #48bb78 100%);
+    background-clip: padding-box, border-box;
+    box-shadow: 0 4px 18px 0 rgba(56, 161, 219, 0.13), 0 1.5px 8px 0 rgba(72, 187, 120, 0.10), 0 0.5px 0.5px 0 rgba(56, 161, 219, 0.08) inset;
+    transition: background 0.5s cubic-bezier(.4, 2, .3, 1), box-shadow 0.3s, transform 0.18s;
+    color: #fff;
+    z-index: 1;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 15px;
+    padding: 2px;
+    background: linear-gradient(120deg, #38a1db, #48bb78, #38a1db 90%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 48%;
+    border-radius: 15px 15px 40% 40%/60% 60% 40% 40%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.08) 100%);
+    pointer-events: none;
+    z-index: 2;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    background: linear-gradient(120deg, #48bb78 0%, #38a1db 100%);
+    box-shadow: 0 8px 32px 0 rgba(56, 161, 219, 0.18), 0 2px 12px 0 rgba(72, 187, 120, 0.13), 0 1px 1px 0 rgba(56, 161, 219, 0.10) inset;
+    transform: scale(1.045);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px 0 rgba(56, 161, 219, 0.10);
+}
+
+.btn-primary span,
+.btn-primary strong {
+    position: relative;
+    z-index: 3;
 }
 
 .btn-secondary {
@@ -325,10 +421,12 @@ header p {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
 }
 
-.destination-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    border-color: rgba(102, 126, 234, 0.3);
+.destination-item:hover,
+.result-card:hover,
+.summary-card:hover {
+    box-shadow: 0 16px 40px rgba(56, 161, 219, 0.13);
+    background: rgba(247, 250, 252, 0.98);
+    border-left: 5px solid #48bb78;
 }
 
 .destination-item h4 {
@@ -738,4 +836,75 @@ input[type="text"][id^="address"] {
     font-size: 1em;
     border-radius: 8px;
     border: 1px solid #ddd;
+}
+
+.elfatek-side-left,
+.elfatek-side-right {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    width: 120px;
+    text-align: center;
+    font-size: 2.1rem;
+    color: #4a67e8;
+    opacity: 0.18;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    z-index: 10;
+    user-select: none;
+    pointer-events: none;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0;
+    line-height: 1.1;
+}
+
+.elfatek-side-left span,
+.elfatek-side-right span {
+    display: block;
+}
+
+.elfatek-side-right {
+    left: auto;
+    right: 0;
+}
+
+.elfatek-header-logo {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0;
+}
+
+.elfatek-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #4a67e8;
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    background: none;
+    text-shadow: none;
+    border: none;
+    padding-bottom: 0;
+    -webkit-background-clip: initial;
+    -webkit-text-fill-color: initial;
+    background-clip: initial;
+    animation: none;
+}
+
+.elfatek-side-left {
+    left: 32px;
+}
+
+.elfatek-side-right {
+    right: 32px;
+}
+
+.elfatek-side-left,
+.elfatek-side-right {
+    opacity: 0.32;
 }
