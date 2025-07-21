@@ -148,8 +148,7 @@ function removeMarkerById(id) {
         }
         return true;
     });
-}
-function clearAll() {
+} function clearAll() {
     destinationMarkers.forEach(m => m.setMap(null));
     destinationMarkers = [];
     if (startMarker) { startMarker.setMap(null); startMarker = null; }
