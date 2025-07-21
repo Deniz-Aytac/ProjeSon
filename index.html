@@ -25,18 +25,12 @@
     </div>
     <div class="elfatek-header">TESLİMAT ROTASI HESAPLAMA</div>
     <div class="container">
-        <header>
-            <!-- Başlık ve açıklama kaldırıldı, üstte tek başlık var -->
-        </header>
-
         <!-- HARİTA ALANI -->
         <div id="map" style="width:100%; height:500px; border-radius:90px; margin-bottom:30px; position:relative;">
         </div>
         <div id="map-coords"
             style="position:absolute; left:60px; bottom:110px; background:rgba(0, 0, 0, 0.7); color:#f0eded; padding:8px 18px; border-radius:12px; font-size:0.8rem; z-index:1000; box-shadow:0 2px 8px rgba(0,0,0,0.15); display:none;">
         </div>
-
-        <!-- TRAFİK KONTROL PANELİ -->
         <div class="traffic-control-panel">
             <div class="traffic-toggle">
                 <input type="checkbox" id="showTraffic" class="traffic-checkbox">
@@ -56,16 +50,13 @@
                 </div>
             </div>
         </div>
-
         <div class="main-content">
             <div class="input-section">
                 <div class="form-group">
                     <h3>
                         <i class="fas fa-truck"></i> Başlangıç Noktası
                         <button id="clearStartPoint" title="Başlangıç Noktasını Temizle"
-                            style="margin-left:10px; background:#fed7d7; color:#c53030; border-radius:50%; width:30px; height:30px; border:none; cursor:pointer;">
-                            🗑️
-                        </button>
+                            style="margin-left:10px; background:#fed7d7; color:#c53030; border-radius:50%; width:30px; height:30px; border:none; cursor:pointer;">🗑️</button>
                     </h3>
                     <div class="coordinate-inputs">
                         <div class="input-group">
@@ -84,36 +75,26 @@
                             Çevir</button>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <h3><i class="fas fa-house"></i> Varış Noktaları</h3>
                     <div class="destination-controls">
-                        <button type="button" id="addDestination" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Nokta Ekle
-                        </button>
-                        <button type="button" id="clearAll" class="btn btn-secondary">
-                            <i class="fas fa-trash"></i> Tümünü Temizle
-                        </button>
+                        <button type="button" id="addDestination" class="btn btn-primary"><i class="fas fa-plus"></i>
+                            Nokta Ekle</button>
+                        <button type="button" id="clearAll" class="btn btn-secondary"><i class="fas fa-trash"></i>
+                            Tümünü Temizle</button>
                     </div>
-                    <div id="destinations" class="destinations-list">
-                        <!-- Varış noktaları buraya eklenecek -->
-                    </div>
+                    <div id="destinations" class="destinations-list"></div>
                 </div>
-
-                <button type="button" id="calculateRoute" class="btn btn-success btn-large">
-                    <i class="fas fa-calculator"></i> Rotayı Hesapla
-                </button>
+                <button type="button" id="calculateRoute" class="btn btn-success btn-large"><i
+                        class="fas fa-calculator"></i> Rotayı Hesapla</button>
             </div>
-
-            <!-- SONUÇ EKRANI: Başlangıçta gizli, hesaplamadan sonra açılır -->
             <div class="results-section" id="resultsSection" style="display: none; margin-top: 30px;">
                 <div class="results-header"
                     style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
                     <h2 style="display:flex; align-items:center; gap:10px;"><i class="fas fa-route"></i> Hesaplanan Rota
                     </h2>
-                    <button type="button" id="exportResults" class="btn btn-outline">
-                        <i class="fas fa-download"></i> Sonuçları İndir
-                    </button>
+                    <button type="button" id="exportResults" class="btn btn-outline"><i class="fas fa-download"></i>
+                        Sonuçları İndir</button>
                 </div>
                 <hr style="margin-bottom:24px;">
                 <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:24px;">
@@ -147,19 +128,11 @@
                 </div>
             </div>
         </div>
-
         <div class="loading" id="loading" style="display: none;">
             <div class="spinner"></div>
             <p>Rota hesaplanıyor...</p>
         </div>
     </div>
-
-    <!-- HERE Maps JS SDK -->
-    <!-- <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script> -->
-    <!-- <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script> -->
-    <!-- <script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script> -->
-    <!-- <script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script> -->
-    <!-- <link rel="stylesheet" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" /> -->
     <script src="script.js"></script>
 </body>
 

@@ -86,10 +86,6 @@ header,
     text-shadow: none;
     border: none;
     padding-bottom: 0;
-    -webkit-background-clip: initial;
-    -webkit-text-fill-color: initial;
-    background-clip: initial;
-    animation: none;
 }
 
 @keyframes titleGlow {
@@ -313,36 +309,17 @@ input[type="number"]:focus {
     padding: 14px 24px;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
-    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    overflow: hidden;
-}
-
-.btn-primary::before,
-.btn-primary::after {
-    display: none !important;
 }
 
 .btn-primary:hover {
     background: #2b8ac6;
-    color: #fff;
-    box-shadow: none;
-    transform: none;
 }
 
 .btn-primary:active {
     background: #2170a3;
-    color: #fff;
-    box-shadow: none;
-    transform: none;
-}
-
-.btn-primary span,
-.btn-primary strong {
-    position: relative;
-    z-index: 3;
 }
 
 .btn-secondary {
@@ -869,10 +846,6 @@ input[type="text"][id^="address"] {
     text-shadow: none;
     border: none;
     padding-bottom: 0;
-    -webkit-background-clip: initial;
-    -webkit-text-fill-color: initial;
-    background-clip: initial;
-    animation: none;
 }
 
 .elfatek-side-left {
