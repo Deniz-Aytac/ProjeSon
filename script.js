@@ -43,14 +43,13 @@ function initGoogleMap() {
 
 function getTruckIcon() {
     return {
-        url: 'https://cdn-icons-png.flaticon.com/512/743/743131.png',
+        url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
         scaledSize: new google.maps.Size(36, 36)
     };
 }
 function getNumberedHouseIcon(number) {
-    const svg = `data:image/svg+xml;utf8,<svg width='40' height='40' xmlns='http://www.w3.org/2000/svg'><rect x='8' y='18' width='24' height='16' rx='4' fill='%2327ae60'/><polygon points='20,8 8,18 32,18' fill='%2327ae60'/><text x='20' y='35' font-size='16' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>${number}</text></svg>`;
     return {
-        url: svg,
+        url: 'images/elfatek.png', // veya .jpg/.svg uzantısı neyse ona göre
         scaledSize: new google.maps.Size(36, 36)
     };
 }
@@ -253,17 +252,41 @@ function displayRouteSummary(routeObj) {
         <div><b>Ziyaret Edilen Nokta:</b> ${visited}</div>
     `;
 }
-function displayTimeEstimates(routeObj) {
+
+async function getDurationWithTraffic(origin, destination) {
+    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.lat},${origin.lon}&destination=${destination.lat},${destination.lon}&departure_time=now&key=${GOOGLE_API_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.routes && data.routes[0] && data.routes[0].legs[0] && data.routes[0].legs[0].duration_in_traffic) {
+        return data.routes[0].legs[0].duration_in_traffic.value; // saniye
+    }
+    return null;
+}
+
+async function displayTimeEstimates(routeObj) {
     const timeDiv = document.getElementById('timeEstimates');
     if (!timeDiv) return;
     const totalKm = routeObj.totalDistance;
     const carTime = totalKm / 82;
     const planeTime = totalKm / 800;
+    // Trafikli süreyi hesapla
+    let trafficSeconds = 0;
+    for (let i = 0; i < routeObj.route.length - 1; i++) {
+        const from = routeObj.route[i];
+        const to = routeObj.route[i + 1];
+        try {
+            const dur = await getDurationWithTraffic(from, to);
+            if (dur) trafficSeconds += dur;
+        } catch (e) { }
+    }
+    let trafficHours = trafficSeconds / 3600;
     timeDiv.innerHTML = `
         <div><b>Araçla (82 km/saat):</b> ${carTime.toFixed(1)} saat</div>
         <div><b>Uçakla (800 km/saat):</b> ${planeTime.toFixed(1)} saat</div>
+        <div><b>Trafikli Tahmini Süre:</b> ${trafficHours > 0 ? trafficHours.toFixed(2) + ' saat' : 'Veri yok'}</div>
     `;
 }
+
 async function displayRouteSequence(routeObj) {
     const seqDiv = document.getElementById('routeSequence');
     if (!seqDiv) return;
@@ -284,12 +307,22 @@ async function displayRouteSequence(routeObj) {
     }
     seqDiv.innerHTML = html;
 }
-function displayDetailedDistances(routeObj) {
+function displayDetailedDistances(routeObj, allDistances) {
     const detDiv = document.getElementById('detailedDistances');
     if (!detDiv) return;
     let html = '';
-    routeObj.steps.forEach((step, i) => {
-        html += `<div style=\"background:#f8fafc; border-radius:12px; padding:16px; margin-bottom:12px;\">\n            <b>Adım ${i + 1}: ${step.from.label} →</b>\n            <div style=\"color:#4a67e8; font-weight:600; font-size:1.1em;\">${step.distance.toFixed(2)} km</div>\n        </div>`;
+    allDistances.forEach((adim, i) => {
+        const fromLabel = i === 0 ? 'Başlangıç' : `Varış Noktası ${adim.from.varisIndex}`;
+        const nearest = adim.distances.find(d => d.isNearest);
+        if (nearest) {
+            const toLabel = nearest.to && typeof nearest.to.varisIndex !== 'undefined'
+                ? `Varış Noktası ${nearest.to.varisIndex}`
+                : (nearest.to.label || '');
+            html += `<div style="background:#f8fafc; border-radius:12px; padding:16px; margin-bottom:12px;">
+                <b>${fromLabel} → ${toLabel}</b>
+                <div style="color:#4a67e8; font-weight:600; font-size:1.1em;">${nearest.value.toFixed(2)} km</div>
+            </div>`;
+        }
     });
     detDiv.innerHTML = html;
 }
@@ -339,9 +372,9 @@ function calculateAllDistancesPerStep(start, destinations) {
 }
 async function showFullResults(routeObj, allDistances) {
     displayRouteSummary(routeObj);
-    displayTimeEstimates(routeObj);
+    await displayTimeEstimates(routeObj);
     await displayRouteSequence(routeObj);
-    displayDetailedDistances(routeObj);
+    displayDetailedDistances(routeObj, allDistances);
     displayAllDistancesPerStep(routeObj, allDistances);
     const resultsSection = document.getElementById('resultsSection');
     if (resultsSection) resultsSection.style.display = '';

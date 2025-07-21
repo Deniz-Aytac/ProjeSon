@@ -182,20 +182,25 @@ header p {
 }
 
 .coordinate-inputs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: flex-start;
+    width: 100%;
 }
 
 .input-group {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
+    flex: 1 1 0;
+    min-width: 120px;
+    max-width: 180px;
 }
 
 .input-group label {
+    margin-bottom: 4px;
     font-weight: 500;
-    margin-bottom: 5px;
-    color: #4a5568;
 }
 
 .input-group input {
@@ -706,4 +711,31 @@ header p {
 
 input[type="number"] {
     width: 210px;
+}
+
+/* Adres inputunu büyüt */
+input[type="text"][id^="address"] {
+    min-width: 350px;
+    padding: 10px;
+    font-size: 1.08em;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+}
+
+/* Gerekirse input-group içindeki inputlar için de genişlik ayarı */
+.input-group input[type="text"] {
+    min-width: 350px;
+}
+
+/* Enlem ve Boylam inputlarını daha kısa yap */
+.input-group input[type="number"] {
+    min-width: 0;
+    width: 100%;
+    max-width: 180px;
+    box-sizing: border-box;
+    padding: 8px;
+    font-size: 1em;
+    border-radius: 8px;
+    border: 1px solid #ddd;
 }
