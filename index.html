@@ -70,7 +70,12 @@
                     </div>
                     <div class="input-group" style="margin-top:10px;">
                         <label for="startAddress">Adres:</label>
-                        <input type="text" id="startAddress" placeholder="Mahalle, Sokak, Apartman, İlçe, Şehir">
+                        <input type="text" id="startAddress" class="autocomplete-address"
+                            placeholder="Mahalle, Sokak, Apartman, İlçe, Şehir">
+                        <img id="streetViewImgStart" src="" alt="Sokak Görünümü"
+                            style="width:300px; height:150px; border-radius:10px; margin-top:10px; display:none;">
+                        <div id="streetViewPanoramaStart"
+                            style="width:300px; height:200px; border-radius:10px; margin-top:10px; display:none;"></div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -132,6 +137,10 @@
         </div>
     </div>
     <script src="script.js"></script>
+    <!-- Google Places Autocomplete için ek script -->
+    <script>
+        // Autocomplete entegrasyonu script.js'de olacak
+    </script>
 </body>
 
 </html>

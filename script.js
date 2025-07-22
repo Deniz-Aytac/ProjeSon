@@ -25,6 +25,7 @@ function initGoogleMap() {
             });
             isStartSelected = true;
             fillStartInputs(e.latLng.lat(), e.latLng.lng());
+            updateStreetViewStart(e.latLng.lat(), e.latLng.lng()); // Street View başlangıç için
         } else {
             const markerId = generateUniqueId();
             addDestinationInput(e.latLng.lat().toFixed(6), e.latLng.lng().toFixed(6), markerId);
@@ -68,6 +69,21 @@ function fillStartInputs(lat, lon) {
 function generateUniqueId() {
     return 'id_' + Math.random().toString(36).substr(2, 9);
 }
+function updateStreetViewStart(lat, lng) {
+    // Statik img yerine etkileşimli Street View
+    const panoDiv = document.getElementById('streetViewPanoramaStart');
+    if (panoDiv) {
+        panoDiv.style.display = 'block';
+        new google.maps.StreetViewPanorama(panoDiv, {
+            position: { lat, lng },
+            pov: { heading: 165, pitch: 0 },
+            zoom: 1
+        });
+    }
+    // Eski statik img gizle
+    const img = document.getElementById('streetViewImgStart');
+    if (img) img.style.display = 'none';
+}
 function addDestinationInput(lat = '', lon = '', forcedId = null, address = '') {
     destinationCounter++;
     const destId = String.fromCharCode(65 + destinationCounter);
@@ -88,7 +104,9 @@ function addDestinationInput(lat = '', lon = '', forcedId = null, address = '') 
             </div>
             <div class="input-group">
                 <label for="address${destId}">Adres:</label>
-                <input type="text" id="address${destId}" value="${address}" placeholder="Adres girin...">
+                <input type="text" id="address${destId}" value="${address}" placeholder="Adres girin..." class="autocomplete-address">
+                <img class="streetViewImgDest" src="" alt="Sokak Görünümü" style="width:300px; height:150px; border-radius:10px; margin-top:10px; display:none;">
+                <div class="streetViewPanoramaDest" style="width:300px; height:200px; border-radius:10px; margin-top:10px; display:none;"></div>
             </div>
         </div>
         <button type="button" class="remove-destination-map" title="Tablo ve Haritadan Sil" style="margin-left:8px; background:#fed7d7; color:#c53030; border-radius:50%; width:30px; height:30px;">🗑️</button>
@@ -99,11 +117,60 @@ function addDestinationInput(lat = '', lon = '', forcedId = null, address = '') 
         destinationsDiv.removeChild(wrapper);
     };
     destinationsDiv.appendChild(wrapper);
+    // Autocomplete ekle
+    const addressInput = wrapper.querySelector(`#address${destId}`);
+    const streetViewImg = wrapper.querySelector('.streetViewImgDest');
+    const panoDiv = wrapper.querySelector('.streetViewPanoramaDest');
+    if (addressInput && typeof google !== 'undefined' && google.maps && google.maps.places) {
+        const autocompleteDest = new google.maps.places.Autocomplete(addressInput, {
+            types: ['geocode'],
+            componentRestrictions: { country: 'tr' }
+        });
+        autocompleteDest.addListener('place_changed', function () {
+            const place = autocompleteDest.getPlace();
+            if (place && place.geometry && place.geometry.location) {
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+                wrapper.querySelector(`#lat${destId}`).value = lat.toFixed(6);
+                wrapper.querySelector(`#lon${destId}`).value = lng.toFixed(6);
+                removeMarkerById(uniqueId);
+                const siraNumarasi = Array.from(document.querySelectorAll('.destination-item')).findIndex(el => el.getAttribute('data-marker-id') === uniqueId) + 1;
+                const destMarker = new google.maps.Marker({
+                    position: { lat, lng },
+                    map: map,
+                    icon: getNumberedHouseIcon(siraNumarasi),
+                    title: `Varış Noktası ${siraNumarasi}`
+                });
+                destMarker._markerId = uniqueId;
+                destinationMarkers.push(destMarker);
+                // Etkileşimli Street View göster
+                if (panoDiv) {
+                    panoDiv.style.display = 'block';
+                    new google.maps.StreetViewPanorama(panoDiv, {
+                        position: { lat, lng },
+                        pov: { heading: 165, pitch: 0 },
+                        zoom: 1
+                    });
+                }
+                // Eski statik img gizle
+                if (streetViewImg) streetViewImg.style.display = 'none';
+            }
+        });
+    }
     if (lat && lon && !address) {
         reverseGeocode(parseFloat(lat), parseFloat(lon)).then(addr => {
-            const addrInput = wrapper.querySelector(`#address${destId}`);
-            if (addrInput) addrInput.value = addr;
+            if (addressInput) addressInput.value = addr;
         });
+        // Eğer koordinatla ekleniyorsa etkileşimli Street View göster
+        if (lat && lon && panoDiv) {
+            panoDiv.style.display = 'block';
+            new google.maps.StreetViewPanorama(panoDiv, {
+                position: { lat: parseFloat(lat), lng: parseFloat(lon) },
+                pov: { heading: 165, pitch: 0 },
+                zoom: 1
+            });
+        }
+        if (streetViewImg) streetViewImg.style.display = 'none';
     }
     return uniqueId;
 }
@@ -460,6 +527,7 @@ async function drawRouteOnMapWithDirections(routeObj) {
     }
 }
 
+// Google Places Autocomplete entegrasyonu
 window.addEventListener('DOMContentLoaded', () => {
     if (typeof google === 'undefined' || !google.maps) {
         setTimeout(() => window.dispatchEvent(new Event('DOMContentLoaded')), 500);
@@ -508,6 +576,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     title: 'Başlangıç Noktası'
                 });
                 isStartSelected = true;
+                updateStreetViewStart(lat, lng); // Başlangıç adresi seçildiğinde updateStreetViewStart(lat, lng) fonksiyonunu çağır
             } catch (e) {
                 alert('Adres bulunamadı!');
             }
@@ -531,5 +600,36 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (trafficLayer) trafficLayer.setMap(null);
             }
         });
+    }
+    if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+        // Başlangıç adresi için autocomplete
+        const startInput = document.getElementById('startAddress');
+        if (startInput) {
+            const autocompleteStart = new google.maps.places.Autocomplete(startInput, {
+                types: ['geocode'],
+                componentRestrictions: { country: 'tr' }
+            });
+            autocompleteStart.addListener('place_changed', async function () {
+                const place = autocompleteStart.getPlace();
+                if (place && place.geometry && place.geometry.location) {
+                    const lat = place.geometry.location.lat();
+                    const lng = place.geometry.location.lng();
+                    if (startMarker) startMarker.setMap(null);
+                    startMarker = new google.maps.Marker({
+                        position: { lat, lng },
+                        map: map,
+                        icon: getTruckIcon(),
+                        title: 'Başlangıç Noktası'
+                    });
+                    map.setCenter({ lat, lng });
+                    document.getElementById('startLat').value = lat.toFixed(6);
+                    document.getElementById('startLon').value = lng.toFixed(6);
+                    isStartSelected = true;
+                    updateStreetViewStart(lat, lng); // Harita tıklaması ile başlangıç noktası seçildiğinde de updateStreetViewStart(lat, lng) çağır
+                }
+            });
+        }
+        // Varış noktası adres inputları için dinamik olarak ekleyeceğiz
+        // Eğer sabit bir input varsa, benzer şekilde eklenebilir
     }
 });
