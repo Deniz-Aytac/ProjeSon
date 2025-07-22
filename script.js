@@ -89,7 +89,6 @@ function addDestinationInput(lat = '', lon = '', forcedId = null, address = '') 
             <div class="input-group">
                 <label for="address${destId}">Adres:</label>
                 <input type="text" id="address${destId}" value="${address}" placeholder="Adres girin...">
-                <button type="button" class="geocode-dest-btn" data-marker-id="${uniqueId}" style="margin-left:6px;">Koordinata Çevir</button>
             </div>
         </div>
         <button type="button" class="remove-destination-map" title="Tablo ve Haritadan Sil" style="margin-left:8px; background:#fed7d7; color:#c53030; border-radius:50%; width:30px; height:30px;">🗑️</button>
@@ -104,37 +103,6 @@ function addDestinationInput(lat = '', lon = '', forcedId = null, address = '') 
         reverseGeocode(parseFloat(lat), parseFloat(lon)).then(addr => {
             const addrInput = wrapper.querySelector(`#address${destId}`);
             if (addrInput) addrInput.value = addr;
-        });
-    }
-    const geocodeBtn = wrapper.querySelector('.geocode-dest-btn');
-    if (geocodeBtn) {
-        geocodeBtn.addEventListener('click', async function () {
-            const markerId = this.getAttribute('data-marker-id');
-            const addressInput = wrapper.querySelector(`#address${destId}`);
-            if (!addressInput || !addressInput.value) {
-                alert('Lütfen bir adres girin.');
-                return;
-            }
-            try {
-                const { lat, lng } = await geocodeAddress(addressInput.value);
-                wrapper.querySelector(`#lat${destId}`).value = lat.toFixed(6);
-                wrapper.querySelector(`#lon${destId}`).value = lng.toFixed(6);
-                removeMarkerById(markerId);
-                const siraNumarasi = Array.from(document.querySelectorAll('.destination-item')).findIndex(el => el.getAttribute('data-marker-id') === markerId) + 1;
-                const destMarker = new google.maps.Marker({
-                    position: { lat, lng },
-                    map: map,
-                    icon: getNumberedHouseIcon(siraNumarasi),
-                    title: `Varış Noktası ${siraNumarasi}`
-                });
-                destMarker._markerId = markerId;
-                destinationMarkers.push(destMarker);
-                reverseGeocode(lat, lng).then(addr => {
-                    addressInput.value = addr;
-                });
-            } catch (e) {
-                alert('Adres bulunamadı!');
-            }
         });
     }
     return uniqueId;
