@@ -437,13 +437,80 @@ function calculateAllDistancesPerStep(start, destinations) {
     }
     return steps;
 }
+// Gerçek yolları takip eden animasyonlu rota çizimi
+function animateRouteWithDirections(routePoints) {
+    if (!window.directionsService) {
+        window.directionsService = new google.maps.DirectionsService();
+    }
+    // Tüm noktaları (waypoints) ayarla
+    const origin = { lat: routePoints[0].lat, lng: routePoints[0].lon };
+    const destination = { lat: routePoints[routePoints.length - 1].lat, lng: routePoints[routePoints.length - 1].lon };
+    const waypoints = routePoints.slice(1, -1).map(pt => ({ location: { lat: pt.lat, lng: pt.lon }, stopover: true }));
+    window.directionsService.route({
+        origin,
+        destination,
+        waypoints,
+        travelMode: google.maps.TravelMode.DRIVING
+    }, (result, status) => {
+        if (status === 'OK' && result.routes[0] && result.routes[0].overview_path) {
+            const path = result.routes[0].overview_path;
+            let polyline = new google.maps.Polyline({
+                path: [],
+                geodesic: true,
+                strokeColor: "#4a67e8",
+                strokeOpacity: 0.9,
+                strokeWeight: 6,
+                map: map
+            });
+            let i = 0;
+            function step() {
+                if (i < path.length) {
+                    polyline.getPath().push(path[i]);
+                    i++;
+                    setTimeout(step, 30); // Hızı burada ayarlayabilirsin
+                }
+            }
+            step();
+            // Marker'ları yol üstündeki varış noktalarına ekle
+            // Her varış noktası için en yakın polyline noktasına marker ekle
+            routePoints.forEach((pt, idx) => {
+                // En yakın polyline noktası bul
+                let minDist = Infinity;
+                let minIdx = 0;
+                for (let j = 0; j < path.length; j++) {
+                    const d = Math.pow(pt.lat - path[j].lat(), 2) + Math.pow(pt.lon - path[j].lng(), 2);
+                    if (d < minDist) {
+                        minDist = d;
+                        minIdx = j;
+                    }
+                }
+                setTimeout(() => {
+                    let marker = new google.maps.Marker({
+                        position: path[minIdx],
+                        map: map,
+                        animation: google.maps.Animation.DROP,
+                        icon: idx === 0 ? getTruckIcon() : getNumberedHouseIcon(idx)
+                    });
+                    if (idx !== 0) {
+                        setTimeout(() => marker.setAnimation(google.maps.Animation.BOUNCE), 200);
+                        setTimeout(() => marker.setAnimation(null), 1200);
+                    }
+                }, minIdx * 30); // Marker'ı polyline'ın çizildiği anda ekle
+            });
+        }
+    });
+}
+// Rota hesaplama sonrası animasyonlu çizimi başlat
 async function showFullResults(routeObj, allDistances) {
     displayRouteSummary(routeObj);
     await displayTimeEstimates(routeObj);
     await displayRouteSequence(routeObj);
     displayDetailedDistances(routeObj, allDistances);
     displayAllDistancesPerStep(routeObj, allDistances);
-    await drawRouteOnMapWithDirections(routeObj); // Haritada yol çizimi
+    // await drawRouteOnMapWithDirections(routeObj); // Eski çizimi kaldır
+    if (routeObj.route && routeObj.route.length > 1) {
+        animateRouteWithDirections(routeObj.route);
+    }
     const resultsSection = document.getElementById('resultsSection');
     if (resultsSection) resultsSection.style.display = '';
 }
