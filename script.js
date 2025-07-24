@@ -54,6 +54,18 @@ function getNumberedHouseIcon(number) {
         scaledSize: new google.maps.Size(36, 36)
     };
 }
+// Backend'e adres kaydetme fonksiyonu
+function saveAddressToBackend(address) {
+    fetch('http://127.0.0.1:5000/save-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address })
+    })
+        .then(res => res.json())
+        .then(data => { console.log('Adres kaydedildi:', data); })
+        .catch(err => { console.error('Adres kaydedilemedi:', err); });
+}
+
 function fillStartInputs(lat, lon) {
     const latInput = document.getElementById('startLat');
     const lonInput = document.getElementById('startLon');
@@ -66,6 +78,7 @@ function fillStartInputs(lat, lon) {
         if (addrInput) addrInput.value = address;
     });
 }
+
 function generateUniqueId() {
     return 'id_' + Math.random().toString(36).substr(2, 9);
 }
@@ -594,6 +607,74 @@ async function drawRouteOnMapWithDirections(routeObj) {
     }
 }
 
+// Backend'e rota kaydetme fonksiyonu
+function saveRouteToBackend(startAddress, destinationAddresses) {
+    fetch('http://127.0.0.1:5000/save-route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            start_address: startAddress,
+            destination_addresses: destinationAddresses
+        })
+    })
+        .then(res => res.json())
+        .then(data => { console.log('Rota kaydedildi:', data); })
+        .catch(err => { console.error('Rota kaydedilemedi:', err); });
+}
+
+// Rotayı Hesapla butonuna tıklandığında rotayı kaydet
+const calcBtn = document.getElementById('calculateRoute');
+if (calcBtn) {
+    calcBtn.addEventListener('click', async (event) => {
+        event.preventDefault();
+
+        // Başlangıç adresi
+        const startAddress = document.getElementById('startAddress').value;
+
+        // Tüm varış adreslerini topla ve eksik olanları koordinatlardan çek
+        const destinationAddresses = [];
+        const destDivs = document.querySelectorAll('#destinations .destination-item');
+
+        for (let div of destDivs) {
+            const addressInput = div.querySelector('input.autocomplete-address');
+            let address = addressInput ? addressInput.value.trim() : '';
+
+            // Eğer adres boşsa, koordinatlardan çek
+            if (!address) {
+                const latInput = div.querySelector('input[id^="lat"]');
+                const lonInput = div.querySelector('input[id^="lon"]');
+                if (latInput && lonInput && latInput.value && lonInput.value) {
+                    try {
+                        address = await reverseGeocode(parseFloat(latInput.value), parseFloat(lonInput.value));
+                        if (addressInput) addressInput.value = address; // Input'u da güncelle
+                    } catch (e) {
+                        console.error('Adres çekilemedi:', e);
+                    }
+                }
+            }
+
+            if (address) {
+                destinationAddresses.push(address);
+            }
+        }
+
+        // Backend'e rotayı kaydet
+        if (startAddress && destinationAddresses.length > 0) {
+            saveRouteToBackend(startAddress, destinationAddresses);
+        }
+
+        // Mevcut rota hesaplama kodu
+        const { start, destinations } = getRouteInputs();
+        if (!start.lat || !start.lon || destinations.length === 0) {
+            alert('Başlangıç ve en az bir varış noktası girin!');
+            return;
+        }
+        const result = nearestNeighborRoute(start, destinations);
+        const allDistances = calculateAllDistancesPerStep(start, destinations);
+        await showFullResults(result, allDistances);
+    });
+}
+
 // Google Places Autocomplete entegrasyonu
 window.addEventListener('DOMContentLoaded', () => {
     if (typeof google === 'undefined' || !google.maps) {
@@ -601,19 +682,6 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
     initGoogleMap();
-    const calcBtn = document.getElementById('calculateRoute');
-    if (calcBtn) {
-        calcBtn.addEventListener('click', async () => {
-            const { start, destinations } = getRouteInputs();
-            if (!start.lat || !start.lon || destinations.length === 0) {
-                alert('Başlangıç ve en az bir varış noktası girin!');
-                return;
-            }
-            const result = nearestNeighborRoute(start, destinations);
-            const allDistances = calculateAllDistancesPerStep(start, destinations);
-            await showFullResults(result, allDistances);
-        });
-    }
     const clearBtn = document.getElementById('clearAll');
     if (clearBtn) {
         clearBtn.addEventListener('click', clearAll);
