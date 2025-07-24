@@ -455,60 +455,107 @@ function animateRouteWithDirections(routePoints) {
     if (!window.directionsService) {
         window.directionsService = new google.maps.DirectionsService();
     }
+
+    // Renk paleti
+    const colors = [
+        '#e74c3c', // kırmızı
+        '#f39c12', // turuncu
+        '#27ae60', // yeşil
+        '#2980b9', // mavi
+        '#8e44ad', // mor
+        '#16a085', // teal
+        '#d35400', // koyu turuncu
+        '#2c3e50', // koyu mavi
+        '#c0392b', // koyu kırmızı
+        '#7f8c8d'  // gri
+    ];
+
     // Tüm noktaları (waypoints) ayarla
     const origin = { lat: routePoints[0].lat, lng: routePoints[0].lon };
     const destination = { lat: routePoints[routePoints.length - 1].lat, lng: routePoints[routePoints.length - 1].lon };
     const waypoints = routePoints.slice(1, -1).map(pt => ({ location: { lat: pt.lat, lng: pt.lon }, stopover: true }));
+
     window.directionsService.route({
         origin,
         destination,
         waypoints,
         travelMode: google.maps.TravelMode.DRIVING
     }, (result, status) => {
-        if (status === 'OK' && result.routes[0] && result.routes[0].overview_path) {
-            const path = result.routes[0].overview_path;
-            let polyline = new google.maps.Polyline({
-                path: [],
-                geodesic: true,
-                strokeColor: "#4a67e8",
-                strokeOpacity: 0.9,
-                strokeWeight: 6,
-                map: map
-            });
-            let i = 0;
-            function step() {
-                if (i < path.length) {
-                    polyline.getPath().push(path[i]);
-                    i++;
-                    setTimeout(step, 30); // Hızı burada ayarlayabilirsin
-                }
-            }
-            step();
-            // Marker'ları yol üstündeki varış noktalarına ekle
-            // Her varış noktası için en yakın polyline noktasına marker ekle
-            routePoints.forEach((pt, idx) => {
-                // En yakın polyline noktası bul
-                let minDist = Infinity;
-                let minIdx = 0;
-                for (let j = 0; j < path.length; j++) {
-                    const d = Math.pow(pt.lat - path[j].lat(), 2) + Math.pow(pt.lon - path[j].lng(), 2);
-                    if (d < minDist) {
-                        minDist = d;
-                        minIdx = j;
+        if (status === 'OK' && result.routes[0]) {
+            const legs = result.routes[0].legs;
+
+            // Her segment için ayrı polyline çiz ve farklı renk kullan
+            legs.forEach((leg, segmentIndex) => {
+                const segmentColor = colors[segmentIndex % colors.length];
+
+                // Her segment için polyline oluştur
+                const segmentPolyline = new google.maps.Polyline({
+                    path: [],
+                    geodesic: true,
+                    strokeColor: segmentColor,
+                    strokeOpacity: 0.9,
+                    strokeWeight: 6,
+                    map: map
+                });
+
+                // Segment path'ini topla
+                const segmentPath = leg.steps.reduce((acc, step) => acc.concat(step.path), []);
+
+                // Animasyonlu çizim
+                let pathIndex = 0;
+                function drawSegment() {
+                    if (pathIndex < segmentPath.length) {
+                        segmentPolyline.getPath().push(segmentPath[pathIndex]);
+                        pathIndex++;
+                        setTimeout(drawSegment, 25);
+                    } else {
+                        // Segment çizimi bitti, ortasına aynı renkte numara ekle
+                        if (segmentPath.length > 0) {
+                            const midIndex = Math.floor(segmentPath.length / 2);
+                            const midPoint = segmentPath[midIndex];
+
+                            // Çizginin rengiyle aynı renkte numara marker'ı ekle
+                            const numberMarker = new google.maps.Marker({
+                                position: midPoint,
+                                map: map,
+                                icon: {
+                                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                                            <circle cx="16" cy="16" r="14" fill="${segmentColor}" stroke="#ffffff" stroke-width="2"/>
+                                            <text x="16" y="21" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#ffffff">${segmentIndex + 1}</text>
+                                        </svg>
+                                    `),
+                                    scaledSize: new google.maps.Size(32, 32),
+                                    anchor: new google.maps.Point(16, 16)
+                                },
+                                title: `${segmentIndex + 1}. Yol Segmenti (${segmentColor})`,
+                                zIndex: 2000
+                            });
+                        }
                     }
                 }
+
+                // Her segment için gecikme ile başlat
+                setTimeout(() => {
+                    drawSegment();
+                }, segmentIndex * 1500);
+            });
+
+            // Varış noktası marker'larını ekle
+            routePoints.forEach((pt, idx) => {
                 setTimeout(() => {
                     let marker = new google.maps.Marker({
-                        position: path[minIdx],
+                        position: { lat: pt.lat, lng: pt.lon },
                         map: map,
                         animation: google.maps.Animation.DROP,
-                        icon: idx === 0 ? getTruckIcon() : getNumberedHouseIcon(idx)
+                        icon: idx === 0 ? getTruckIcon() : getNumberedHouseIcon(idx),
+                        zIndex: 1000
                     });
                     if (idx !== 0) {
                         setTimeout(() => marker.setAnimation(google.maps.Animation.BOUNCE), 200);
                         setTimeout(() => marker.setAnimation(null), 1200);
                     }
-                }, minIdx * 30); // Marker'ı polyline'ın çizildiği anda ekle
+                }, idx * 500);
             });
         }
     });
