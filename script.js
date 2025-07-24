@@ -520,10 +520,15 @@ async function showFullResults(routeObj, allDistances) {
     await displayRouteSequence(routeObj);
     displayDetailedDistances(routeObj, allDistances);
     displayAllDistancesPerStep(routeObj, allDistances);
-    // await drawRouteOnMapWithDirections(routeObj); // Eski çizimi kaldır
-    if (routeObj.route && routeObj.route.length > 1) {
-        animateRouteWithDirections(routeObj.route);
+
+    // Rota çizimi kaldırıldı - sadece "Rotayı Çiz" butonunu göster
+    const drawRouteBtn = document.getElementById('drawRoute');
+    if (drawRouteBtn) {
+        drawRouteBtn.style.display = 'inline-block';
+        // Butona rota bilgisini ekle (sonra kullanmak için)
+        drawRouteBtn._routeData = routeObj;
     }
+
     const resultsSection = document.getElementById('resultsSection');
     if (resultsSection) resultsSection.style.display = '';
 }
@@ -682,6 +687,29 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
     initGoogleMap();
+
+    // "Rotayı Çiz" butonu event listener'ı
+    const drawRouteBtn = document.getElementById('drawRoute');
+    if (drawRouteBtn) {
+        drawRouteBtn.addEventListener('click', function () {
+            const routeData = this._routeData;
+            if (routeData && routeData.route && routeData.route.length > 1) {
+                // Butonu devre dışı bırak
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Çiziliyor...';
+
+                // Rotayı çiz
+                animateRouteWithDirections(routeData.route);
+
+                // 3 saniye sonra butonu tekrar aktif et
+                setTimeout(() => {
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-route"></i> Rotayı Çiz';
+                }, 3000);
+            }
+        });
+    }
+
     const clearBtn = document.getElementById('clearAll');
     if (clearBtn) {
         clearBtn.addEventListener('click', clearAll);
